@@ -37,18 +37,16 @@ func CompileIgnoreFile(path string) (*GitIgnore, error) {
 	return ret, nil
 }
 
-func CompileIgnoreLines(lines ...string) (*GitIgnore, error) {
-	linesCopy := make([]string, len(lines))
-	copy(linesCopy, lines)
-
-	slices.DeleteFunc(linesCopy, func(line string) bool {
+func CompileIgnoreLines(lines ...string) *GitIgnore {
+	lines = slices.DeleteFunc(lines, func(line string) bool {
 		return line == "" || strings.TrimRight(line, " ") == ""
 	})
 
-	gi := &GitIgnore{lines: linesCopy}
-	return gi, nil
+	gi := &GitIgnore{lines: lines}
+	return gi
 }
 
 func (gi *GitIgnore) MatchesPath(path string) bool {
-
+	// TODO: Implement
+	return false
 }
