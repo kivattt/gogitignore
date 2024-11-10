@@ -61,8 +61,13 @@ func (gi *GitIgnore) MatchesPath(path string) bool {
 	for i := len(gi.lines) - 1; i >= 0; i-- {
 		line := gi.lines[i]
 
+		negate := line[0] == '!'
+		if negate {
+			line = line[1:]
+		}
+
 		if MatchesLine(line, path) {
-			return line[0] != '!'
+			return !negate
 		}
 	}
 
