@@ -24,3 +24,6 @@ func TestCompileIgnoreLines(t *testing.T) {
 	gi := CompileIgnoreLines("", "hello", "world", " ", "a  ")
 	AssertLinesEqual(t, gi, "hello", "world", "a  ")
 }
+
+func TestMatchesPath(t *testing.T) {
+}

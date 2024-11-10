@@ -3,6 +3,7 @@ package ignore
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -46,7 +47,24 @@ func CompileIgnoreLines(lines ...string) *GitIgnore {
 	return gi
 }
 
+func MatchesLine(line, path string) bool {
+	match, err := filepath.Match(line, path)
+	if err != nil {
+		return false
+	}
+
+	return match
+}
+
 func (gi *GitIgnore) MatchesPath(path string) bool {
-	// TODO: Implement
+	// Match through the lines backwards
+	for i := len(gi.lines) - 1; i >= 0; i-- {
+		line := gi.lines[i]
+
+		if MatchesLine(line, path) {
+			return line[0] != '!'
+		}
+	}
+
 	return false
 }
