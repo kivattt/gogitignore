@@ -56,7 +56,6 @@ func TestParseCharRange(t *testing.T) {
 	if i != len(text)-1 {
 		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
 	}
-
 	expected := characterRange{
 		negate: false,
 		ranges: []startAndEndIndex{
@@ -75,7 +74,6 @@ func TestParseCharRange(t *testing.T) {
 	if i != len(text)-1 {
 		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
 	}
-
 	expected = characterRange{
 		negate: true,
 		ranges: []startAndEndIndex{
@@ -94,7 +92,6 @@ func TestParseCharRange(t *testing.T) {
 	if i != len(text)-1 {
 		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
 	}
-
 	expected = characterRange{
 		negate: false,
 		ranges: []startAndEndIndex{
@@ -115,7 +112,6 @@ func TestParseCharRange(t *testing.T) {
 	if i != len(text)-1 {
 		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
 	}
-
 	expected = characterRange{
 		negate: false,
 		ranges: []startAndEndIndex{
@@ -133,7 +129,6 @@ func TestParseCharRange(t *testing.T) {
 	if i != len(text)-1 {
 		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
 	}
-
 	expected = characterRange{
 		negate: false,
 		ranges: []startAndEndIndex{
@@ -150,6 +145,24 @@ func TestParseCharRange(t *testing.T) {
 	_, _, err := parseCharRange(text, 0)
 	if err == nil {
 		t.Fatal("Expected unclosed error, but got nil")
+	}
+
+	text = "[a-z0-9]"
+	got, i, _ = parseCharRange(text, 0)
+	if i != len(text)-1 {
+		t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(text)-1) + ", but got: " + strconv.Itoa(i))
+	}
+	expected = characterRange{
+		negate: false,
+		ranges: []startAndEndIndex{
+			{start: 'a', end: 'z'},
+			{start: '0', end: '9'},
+		},
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		printRanges(expected, got)
+		t.Fatal("Incorrect parseCharRange output")
 	}
 }
 
@@ -225,6 +238,35 @@ func TestCompileLine(t *testing.T) {
 		{theType: CharLiteral, chars: "i"},
 		{theType: CharLiteral, chars: "l"},
 		{theType: CharLiteral, chars: "e"},
+	}
+	if !reflect.DeepEqual(expected, got) {
+		printMatchTokens(expected, got)
+		t.Fatal("Incorrect CompileLine output")
+	}
+
+	got, _ = compileLine("[a-z]")
+	expected = []matchToken{
+		{theType: CharRange, ranges: characterRange{
+			negate: false, ranges: []startAndEndIndex{
+				{start: 'a', end: 'z'},
+			},
+		}},
+	}
+	if !reflect.DeepEqual(expected, got) {
+		printMatchTokens(expected, got)
+		t.Fatal("Incorrect CompileLine output")
+	}
+
+	got, _ = compileLine("a[a-z0-9]b")
+	expected = []matchToken{
+		{theType: CharLiteral, chars: "a"},
+		{theType: CharRange, ranges: characterRange{
+			negate: false, ranges: []startAndEndIndex{
+				{start: 'a', end: 'z'},
+				{start: '0', end: '9'},
+			},
+		}},
+		{theType: CharLiteral, chars: "b"},
 	}
 	if !reflect.DeepEqual(expected, got) {
 		printMatchTokens(expected, got)

@@ -168,7 +168,7 @@ func compileLine(line string) ([]matchToken, error) {
 				return ret, err
 			}
 			ret = append(ret, matchToken{theType: CharRange, ranges: theRanges})
-			i = newIndex + 1
+			i = newIndex
 			isEscaped = false
 			continue
 		default:
