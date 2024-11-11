@@ -272,4 +272,21 @@ func TestCompileLine(t *testing.T) {
 		printMatchTokens(expected, got)
 		t.Fatal("Incorrect CompileLine output")
 	}
+
+	got, _ = compileLine("a[a-z[0-9]b")
+	expected = []matchToken{
+		{theType: CharLiteral, chars: "a"},
+		{theType: CharRange, ranges: characterRange{
+			negate: false, ranges: []startAndEndIndex{
+				{start: 'a', end: 'z'},
+				{start: '[', end: '['},
+				{start: '0', end: '9'},
+			},
+		}},
+		{theType: CharLiteral, chars: "b"},
+	}
+	if !reflect.DeepEqual(expected, got) {
+		printMatchTokens(expected, got)
+		t.Fatal("Incorrect CompileLine output")
+	}
 }
