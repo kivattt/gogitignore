@@ -79,6 +79,7 @@ func parseCharRange(text string, atIndex int) (characterRange, int, error) {
 	if negate {
 		i++
 	}
+	startIndex := i
 
 	ret := characterRange{negate: negate}
 
@@ -86,9 +87,9 @@ func parseCharRange(text string, atIndex int) (characterRange, int, error) {
 	inRange := false
 	for ; i < len(text); i++ {
 		c := text[i]
-		peekIsDash := i+1 > len(text)-1 || text[i+1] == '-'
+		peekIsDash := i+2 < len(text) && (text[i+1] == '-' && text[i+2] != ']')
 
-		if i != 0 && c == ']' {
+		if i != startIndex && c == ']' {
 			return ret, i, nil
 		}
 
@@ -163,14 +164,13 @@ func compileLine(line string) ([]matchToken, error) {
 		case '?':
 			ret = append(ret, matchToken{theType: QuestionMark})
 		case '[':
+			// TODO: Refactor the whole parseCharRange function into this one, so we handle backslash escapes in ranges aswell
 			theRanges, newIndex, err := parseCharRange(line, i)
 			if err != nil {
 				return ret, err
 			}
 			ret = append(ret, matchToken{theType: CharRange, ranges: theRanges})
 			i = newIndex
-			isEscaped = false
-			continue
 		default:
 			ret = append(ret, matchToken{theType: CharLiteral, chars: string(c)})
 		}
