@@ -142,12 +142,19 @@ func compileLine(line string) ([]matchToken, error) {
 			continue
 		}
 
-		nextThreeCharsMeanMiddleDoubleAsterix := i+3 > len(line)-1 || line[i:i+3] == "**"+string(os.PathSeparator)
+		//nextThreeCharsMeanMiddleDoubleAsterix := i+3 > len(line)-1 || line[i:i+3] == "**"+string(os.PathSeparator)
+		var nextThreeCharsMeanMiddleDoubleAsterix bool
+		if i+4 > len(line)-1 {
+			nextThreeCharsMeanMiddleDoubleAsterix = false
+		} else {
+			nextThreeCharsMeanMiddleDoubleAsterix = line[i+1:i+4] == "**"+string(os.PathSeparator)
+		}
 		switch c {
 		case os.PathSeparator:
 			if nextThreeCharsMeanMiddleDoubleAsterix {
+				ret = append(ret, matchToken{theType: PathSeparator})
 				ret = append(ret, matchToken{theType: MiddleDoubleAsterix})
-				i += 3
+				i += 2
 			} else {
 				ret = append(ret, matchToken{theType: PathSeparator})
 			}
@@ -217,7 +224,10 @@ func CompileIgnoreLines(lines ...string) *GitIgnore {
 }
 
 func MatchesLine(line, path string) bool {
-	//	for _, toMatch := range
+	/*	tokens, err := compileLine(line)
+		for _, token := range tokens {
+			token.theType
+		}*/
 	return false
 }
 

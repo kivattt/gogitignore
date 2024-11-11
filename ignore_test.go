@@ -212,4 +212,22 @@ func TestCompileLine(t *testing.T) {
 		printMatchTokens(expected, got)
 		t.Fatal("Incorrect CompileLine output")
 	}
+
+	got, _ = compileLine("dir/**/file")
+	expected = []matchToken{
+		{theType: CharLiteral, chars: "d"},
+		{theType: CharLiteral, chars: "i"},
+		{theType: CharLiteral, chars: "r"},
+		{theType: PathSeparator},
+		{theType: MiddleDoubleAsterix},
+		{theType: PathSeparator},
+		{theType: CharLiteral, chars: "f"},
+		{theType: CharLiteral, chars: "i"},
+		{theType: CharLiteral, chars: "l"},
+		{theType: CharLiteral, chars: "e"},
+	}
+	if !reflect.DeepEqual(expected, got) {
+		printMatchTokens(expected, got)
+		t.Fatal("Incorrect CompileLine output")
+	}
 }
