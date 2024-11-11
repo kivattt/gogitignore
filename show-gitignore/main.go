@@ -1,4 +1,4 @@
-package ignore
+package main
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	gi, err := ignore.CompileIgnoreFile(".gitignore")
+	gi, err := ignore.CompileIgnoreFile("gitignore")
 	if err != nil {
 		log.Fatal(err)
 	}
