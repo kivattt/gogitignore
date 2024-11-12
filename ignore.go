@@ -64,7 +64,8 @@ type startAndEndIndex struct {
 	end   byte
 }
 
-// Returns the ending index of the character range
+// Returns the ending index of the character range.
+// Handles backslashes since it's always used within a CompileLine()
 func parseCharRange(text string, atIndex int) (characterRange, int, error) {
 	if atIndex > len(text)-1 {
 		return characterRange{}, 0, errors.New("parseCharRange received an invalid atIndex")
@@ -84,12 +85,19 @@ func parseCharRange(text string, atIndex int) (characterRange, int, error) {
 	ret := characterRange{negate: negate}
 
 	var currentStartRange byte
+	isEscaped := false
 	inRange := false
 	for ; i < len(text); i++ {
 		c := text[i]
+
+		if !isEscaped && c == '\\' {
+			isEscaped = true
+			continue
+		}
+
 		peekIsDash := i+2 < len(text) && (text[i+1] == '-' && text[i+2] != ']')
 
-		if i != startIndex && c == ']' {
+		if !isEscaped && i != startIndex && c == ']' {
 			return ret, i, nil
 		}
 
@@ -106,10 +114,11 @@ func parseCharRange(text string, atIndex int) (characterRange, int, error) {
 			ret.ranges = append(ret.ranges, startAndEndIndex{start: c, end: c})
 		}
 
+		isEscaped = false
 		inRange = false
 	}
 
-	return characterRange{}, 0, errors.New("Unclosed character range")
+	return characterRange{}, 0, errors.New("unclosed character range")
 }
 
 func compileLine(line string) ([]matchToken, error) {
@@ -164,7 +173,6 @@ func compileLine(line string) ([]matchToken, error) {
 		case '?':
 			ret = append(ret, matchToken{theType: QuestionMark})
 		case '[':
-			// TODO: Refactor the whole parseCharRange function into this one, so we handle backslash escapes in ranges aswell
 			theRanges, newIndex, err := parseCharRange(line, i)
 			if err != nil {
 				return ret, err

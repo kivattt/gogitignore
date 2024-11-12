@@ -132,7 +132,7 @@ func TestParseCharRange(t *testing.T) {
 			},
 		},
 		{
-			text: "[a-z\\]",
+			text: "[a-z\\\\]",
 			expected: characterRange{
 				negate: false,
 				ranges: []startAndEndIndex{
@@ -160,7 +160,7 @@ func TestParseCharRange(t *testing.T) {
 	for _, aTest := range tests {
 		got, i, _ := parseCharRange(aTest.text, 0)
 		if i != len(aTest.text)-1 {
-			t.Fatal("Incorrect end index, expected " + strconv.Itoa(len(aTest.text)-1) + ", but got: " + strconv.Itoa(i))
+			t.Fatal("Incorrect end index for text \"" + aTest.text + "\", expected " + strconv.Itoa(len(aTest.text)-1) + ", but got: " + strconv.Itoa(i))
 		}
 		if !reflect.DeepEqual(got, aTest.expected) {
 			printRanges(aTest.expected, got)
@@ -239,30 +239,29 @@ func TestCompileLine(t *testing.T) {
 				{theType: CharLiteral, chars: "b"},
 			},
 		},
-		// TODO: Put parseCharRange inside of CompileLine
-		/*		test{
-					text: "[a-z\\0-9]",
-					expected: []matchToken{
-						{theType: CharRange, ranges: characterRange{
-							negate: false, ranges: []startAndEndIndex{
-								{start: 'a', end: 'z'},
-								{start: '0', end: '9'},
-							},
-						}},
+		{
+			text: "[a-z\\0-9]",
+			expected: []matchToken{
+				{theType: CharRange, ranges: characterRange{
+					negate: false, ranges: []startAndEndIndex{
+						{start: 'a', end: 'z'},
+						{start: '0', end: '9'},
 					},
-				},
-		/*		test{
-					text: "[a-z\\\\0-9]",
-					expected: []matchToken{
-						{theType: CharRange, ranges: characterRange{
-							negate: false, ranges: []startAndEndIndex{
-								{start: 'a', end: 'z'},
-								{start: '\\', end: '\\'},
-								{start: '0', end: '9'},
-							},
-						}},
+				}},
+			},
+		},
+		{
+			text: "[a-z\\\\0-9]",
+			expected: []matchToken{
+				{theType: CharRange, ranges: characterRange{
+					negate: false, ranges: []startAndEndIndex{
+						{start: 'a', end: 'z'},
+						{start: '\\', end: '\\'},
+						{start: '0', end: '9'},
 					},
-				},*/
+				}},
+			},
+		},
 	}
 
 	printMatchTokens := func(expected, got []matchToken) {
