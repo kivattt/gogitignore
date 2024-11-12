@@ -231,12 +231,71 @@ func CompileIgnoreLines(lines ...string) *GitIgnore {
 	return gi
 }
 
-func MatchesLine(line, path string) bool {
-	/*	tokens, err := compileLine(line)
-		for _, token := range tokens {
-			token.theType
-		}*/
-	return false
+func charMatch(c byte, token matchToken) bool {
+	if token.theType == Asterix {
+		return false // Should never happen
+	}
+
+	switch token.theType {
+	case QuestionMark:
+		return true // Matches any single character
+	case CharLiteral:
+		if c != token.chars[0] {
+			return false
+		}
+	case CharRange:
+		for _, r := range token.ranges.ranges {
+			if c >= r.start && c <= r.end {
+				return !token.ranges.negate
+			}
+		}
+	}
+
+	return true
+}
+
+func MatchesLine(line, path string) (bool, error) {
+	tokens, err := compileLine(line)
+	if err != nil {
+		return false, errors.New("invalid gitignore line")
+	}
+
+	findFirstMatch := false
+	pathIndex := 0
+	for _, token := range tokens {
+		//fmt.Println("token: " + matchTypeToString(token.theType))
+		if token.theType == Asterix {
+			findFirstMatch = true
+			continue
+		}
+
+		if pathIndex >= len(path) {
+			return false, nil
+		}
+
+		if findFirstMatch {
+			for ; pathIndex < len(path); pathIndex++ {
+				if charMatch(path[pathIndex], token) {
+					//fmt.Println("found first match at index:", pathIndex)
+					pathIndex++
+					break
+				}
+			}
+			//fmt.Println("after:", pathIndex)
+			findFirstMatch = false
+			continue
+		} else {
+			if !charMatch(path[pathIndex], token) {
+				//fmt.Println("fail match:", pathIndex)
+				return false, nil
+			}
+		}
+
+		findFirstMatch = false
+		pathIndex++
+	}
+
+	return pathIndex == len(path), nil
 }
 
 func (gi *GitIgnore) MatchesPath(path string) bool {
@@ -249,7 +308,12 @@ func (gi *GitIgnore) MatchesPath(path string) bool {
 			line = line[1:]
 		}
 
-		if MatchesLine(line, path) {
+		matches, err := MatchesLine(line, path)
+		if err != nil {
+			continue
+		}
+
+		if matches {
 			return !negate
 		}
 	}

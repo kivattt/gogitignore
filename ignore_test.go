@@ -14,6 +14,18 @@ func bool2Str(b bool) string {
 	return "false"
 }
 
+func AssertMatch(t *testing.T, gi *GitIgnore, text string) {
+	if !gi.MatchesPath(text) {
+		t.Fatal("No match for text \"" + text + "\"")
+	}
+}
+
+func AssertNoMatch(t *testing.T, gi *GitIgnore, text string) {
+	if gi.MatchesPath(text) {
+		t.Fatal("Match for text \"" + text + "\"")
+	}
+}
+
 func AssertLinesEqual(t *testing.T, gi *GitIgnore, lines ...string) {
 	if !reflect.DeepEqual(gi.lines, lines) {
 		fmt.Println("Expected:")
@@ -34,6 +46,26 @@ func TestCompileIgnoreLines(t *testing.T) {
 }
 
 func TestMatchesPath(t *testing.T) {
+	gi := CompileIgnoreLines("text", "more-text", "*something")
+	AssertMatch(t, gi, "text")
+	AssertMatch(t, gi, "more-text")
+	AssertNoMatch(t, gi, "aext")
+	AssertNoMatch(t, gi, "mmore-text")
+
+	giWildcard := CompileIgnoreLines("*something")
+	AssertMatch(t, giWildcard, "something")
+	AssertMatch(t, giWildcard, "hi-something")
+	AssertNoMatch(t, giWildcard, "hi-s")
+	AssertNoMatch(t, giWildcard, "somethings")
+
+	giWildcard2 := CompileIgnoreLines("*hello", "*hello*john*")
+	AssertMatch(t, giWildcard2, "hello")
+	AssertMatch(t, giWildcard2, "hi hello") // Oops, so this is why regexes have to retrace their steps...
+	AssertMatch(t, giWildcard2, "hellojohn")
+	AssertMatch(t, giWildcard2, "hello, john")
+	AssertMatch(t, giWildcard2, "hello, john!")
+	AssertMatch(t, giWildcard2, "hi and hello, john!")
+	AssertNoMatch(t, giWildcard2, "hello, josh")
 }
 
 func TestParseCharRange(t *testing.T) {
